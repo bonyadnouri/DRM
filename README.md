@@ -32,15 +32,16 @@ A local testable MVP scaffold with:
 ## Run locally
 ```bash
 npm install
-npm run dev
-```
-
-Optional: enable SQLite persistence instead of in-memory mode:
-```bash
 cp .env.example .env
 npm run prisma:generate
 npm run prisma:push
-PERSISTENCE_PROVIDER=prisma npm run dev
+npm run dev
+```
+
+By default the app now uses the Prisma-backed SQLite repository.
+If you want the older in-memory mode for debugging:
+```bash
+PERSISTENCE_PROVIDER=memory npm run dev
 ```
 
 Then test in another shell:

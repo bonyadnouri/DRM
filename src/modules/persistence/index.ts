@@ -3,11 +3,11 @@ import type { Repository } from './repository.js';
 import { InMemoryRepository } from './repository.js';
 
 export function createRepository(): Repository {
-  const provider = (process.env.PERSISTENCE_PROVIDER ?? 'memory').trim().toLowerCase();
+  const provider = (process.env.PERSISTENCE_PROVIDER ?? 'prisma').trim().toLowerCase();
 
-  if (provider === 'prisma') {
-    return new PrismaRepository();
+  if (provider === 'memory') {
+    return new InMemoryRepository();
   }
 
-  return new InMemoryRepository();
+  return new PrismaRepository();
 }
