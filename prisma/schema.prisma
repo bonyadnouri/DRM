@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ThreadStage {
+  new
+  opened
+  active
+  followup_needed
+  close_candidate
+  closed
+}
+
+enum MessageDirection {
+  inbound
+  outbound
+}
+
+enum DraftType {
+  opener
+  reply
+  followup
+}
+
+enum DraftStyleVariant {
+  safe
+  playful
+  bold
+  recommended
+}
+
+enum TaskType {
+  followup
+  review
+  clarify_identity
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+enum TaskStatus {
+  open
+  done
+}
+
+enum AttachmentSource {
+  telegram_upload
+  manual_test
+}
+
+enum IntakeEventKind {
+  received
+  classified
+  profile_created
+  thread_created
+  messages_added
+  drafts_generated
+}
+
+model Profile {
+  id                   String   @id
+  platform             String
+  displayName          String
+  age                  Int?
+  location             String?
+  bio                  String?
+  promptSetJson        String
+  photoNotesJson       String
+  vibeTagsJson         String
+  redFlagsJson         String
+  extractionConfidence Float
+  createdAt            DateTime
+  updatedAt            DateTime
+  threads              Thread[]
+}
+
+model Thread {
+  id            String      @id
+  profileId     String
+  stage         ThreadStage
+  nextGoal      String?
+  lastSummary   String?
+  followupDueAt DateTime?
+  createdAt     DateTime
+  updatedAt     DateTime
+  profile       Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  messages      Message[]
+  drafts        Draft[]
+  tasks         Task[]
+}
+
+model Message {
+  id         String           @id
+  threadId   String
+  direction  MessageDirection
+  body       String
+  confidence Float
+  createdAt  DateTime
+  thread     Thread           @relation(fields: [threadId], references: [id], onDelete: Cascade)
+}
+
+model Draft {
+  id           String            @id
+  threadId     String
+  type         DraftType
+  styleVariant DraftStyleVariant
+  body         String
+  rationale    String?
+  createdAt    DateTime
+  thread       Thread            @relation(fields: [threadId], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id        String           @id
+  filename  String
+  path      String
+  source    AttachmentSource
+  sha256    String?
+  createdAt DateTime
+}
+
+model Task {
+  id        String       @id
+  threadId  String
+  type      TaskType
+  dueAt     DateTime?
+  priority  TaskPriority
+  status    TaskStatus
+  note      String
+  createdAt DateTime
+  thread    Thread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+}
+
+model IntakeEvent {
+  id          String          @id
+  intakeJobId String
+  kind        IntakeEventKind
+  createdAt   DateTime
+  payloadJson String
+}
