@@ -19,7 +19,7 @@ A local testable MVP scaffold with:
 - `POST /intake/chat-demo` for a mocked ongoing-chat flow
 - extraction adapter boundary for LLM/vision-based screenshot parsing
 - demo extraction endpoints: `POST /extract/profile-demo` and `POST /extract/chat-demo`
-- end-to-end extraction-to-intake demo endpoint: `POST /pipeline/profile-demo`
+- end-to-end extraction-to-intake demo endpoints: `POST /pipeline/profile-demo` and `POST /pipeline/chat-demo`
 - optional real OpenAI vision extraction when `OPENAI_API_KEY` is present
 - Telegram-style text presenter for operator-friendly output previews
 - repository abstraction now wired into runtime intake writes
@@ -48,6 +48,7 @@ Then test in another shell:
 ```bash
 curl -X POST http://localhost:3000/extract/profile-demo
 curl -X POST http://localhost:3000/pipeline/profile-demo
+curl -X POST http://localhost:3000/pipeline/chat-demo
 curl -X POST http://localhost:3000/intake/profile-demo
 curl -X POST http://localhost:3000/intake/chat-demo
 curl http://localhost:3000/threads

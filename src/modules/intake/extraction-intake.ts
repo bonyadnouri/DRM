@@ -1,7 +1,7 @@
 import type { IntakeRequest } from '../../domain/intake.js';
 import type { ExtractionAdapter } from '../extraction/adapter.js';
 import type { Repository } from '../persistence/repository.js';
-import { processIntake, type IntakeResult } from './service.js';
+import { ensureDemoThread, processIntake, type IntakeResult } from './service.js';
 
 export async function processExtractedIntake(params: {
   kind: 'profile_batch' | 'chat_batch';
@@ -18,7 +18,12 @@ export async function processExtractedIntake(params: {
         : 'Extract the chat screenshots into normalized Hinge chat JSON.',
   });
 
-  const intake = mapExtractionToIntake(params.kind, params.attachments, extraction);
+  const intake = await mapExtractionToIntake({
+    kind: params.kind,
+    attachments: params.attachments,
+    extraction,
+    repository: params.repository,
+  });
   const result = await processIntake(intake, params.repository);
 
   return {
@@ -27,13 +32,14 @@ export async function processExtractedIntake(params: {
   };
 }
 
-function mapExtractionToIntake(
-  kind: 'profile_batch' | 'chat_batch',
-  attachments: Array<{ filename: string; path?: string; mimeType?: string }>,
-  extraction: unknown,
-): IntakeRequest {
-  if (kind === 'profile_batch') {
-    const profile = extraction as {
+async function mapExtractionToIntake(params: {
+  kind: 'profile_batch' | 'chat_batch';
+  attachments: Array<{ filename: string; path?: string; mimeType?: string }>;
+  extraction: unknown;
+  repository: Repository;
+}): Promise<IntakeRequest> {
+  if (params.kind === 'profile_batch') {
+    const profile = params.extraction as {
       displayName: string;
       age?: number;
       location?: string;
@@ -47,7 +53,7 @@ function mapExtractionToIntake(
 
     return {
       kind: 'profile_batch',
-      attachments,
+      attachments: params.attachments,
       profile: {
         displayName: profile.displayName,
         age: profile.age,
@@ -63,15 +69,17 @@ function mapExtractionToIntake(
     };
   }
 
-  const chat = extraction as {
+  const chat = params.extraction as {
     threadHint?: string;
     messages?: Array<{ direction: 'inbound' | 'outbound'; body: string; confidence: number }>;
   };
 
+  const demoThread = await ensureDemoThread(params.repository);
+
   return {
     kind: 'chat_batch',
-    attachments,
-    threadId: chat.threadHint ?? 'demo-thread',
+    attachments: params.attachments,
+    threadId: demoThread.id,
     messages: chat.messages ?? [],
   };
 }

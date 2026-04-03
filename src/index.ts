@@ -201,6 +201,32 @@ app.post('/pipeline/profile-demo', async (_request, reply) => {
   });
 });
 
+app.post('/pipeline/chat-demo', async (_request, reply) => {
+  const attachments = [{ filename: 'chat-1.png', path: 'fixtures/chat-1.png' }];
+
+  const pipeline = await processExtractedIntake({
+    kind: 'chat_batch',
+    attachments,
+    extractionAdapter,
+    repository,
+  });
+
+  return reply.code(200).send({
+    ok: true,
+    ...pipeline,
+    telegramPreview:
+      pipeline.result.profile && pipeline.result.thread && pipeline.result.summary && pipeline.result.drafts
+        ? formatChatResult({
+            profileName: pipeline.result.profile.displayName,
+            thread: pipeline.result.thread,
+            summary: pipeline.result.summary,
+            drafts: pipeline.result.drafts,
+            task: pipeline.result.task,
+          })
+        : null,
+  });
+});
+
 const port = Number(process.env.PORT || 3000);
 
 try {
