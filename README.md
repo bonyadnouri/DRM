@@ -92,3 +92,14 @@ Telegram presentation helpers now cover:
 - follow-up lists
 - thread detail views
 - action confirmations
+
+Telegram command parsing now recognizes:
+- `/followups`
+- `/threads`
+- `/thread <threadId>`
+- `/close <threadId>`
+- `/reopen <threadId>`
+- `/stage <threadId> <stage>`
+- `/mark-sent <threadId> <text>`
+- `/mark-replied <threadId> <text>`
+- `/followup <threadId> <note>`

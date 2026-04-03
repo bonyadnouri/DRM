@@ -48,6 +48,9 @@ Initial command family:
 - `/mark-replied <threadId> <text>`
 - `/followup <threadId> <note>`
 
+Status:
+- command parsing abstraction implemented in `src/modules/telegram/command-router.ts`
+
 ---
 
 ## Output contracts
