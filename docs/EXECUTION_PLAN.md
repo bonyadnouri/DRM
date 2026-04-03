@@ -137,14 +137,19 @@ Success criteria:
 - first realistic manual test path works cleanly
 - results are understandable and inspectable
 
+Substeps:
+- 7a: first realistic manual test run
+- 7b: fix issues found in test run
+- 7c: tighten docs/checklists after fixes
+
 ---
 
 ## Immediate next step
-Do Step 2 now:
-**Make persistence the first-class runtime path.**
+Do Step 7a now:
+**Run the first realistic manual test pass and capture/fix the first concrete issues.**
 
 Reason:
-Everything else becomes cleaner once the app stops pretending in-memory state is the real backend.
+The project now has enough structure to stop primarily building scaffolding and start validating the actual path.
 
 ---
 
