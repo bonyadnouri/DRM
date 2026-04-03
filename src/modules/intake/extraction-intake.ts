@@ -49,7 +49,9 @@ export async function extractScreenshots(params: {
         : 'Extract the chat screenshots into normalized Hinge chat JSON.',
   });
 
-  return extraction as ProfileExtractionResult | ChatExtractionResult;
+  return params.kind === 'profile_batch'
+    ? normalizeProfileExtraction(extraction as ProfileExtractionResult)
+    : normalizeChatExtraction(extraction as ChatExtractionResult);
 }
 
 export async function mapExtractionToIntake(params: {
@@ -59,7 +61,7 @@ export async function mapExtractionToIntake(params: {
   repository: Repository;
 }): Promise<IntakeRequest> {
   if (params.kind === 'profile_batch') {
-    const profile = params.extraction as ProfileExtractionResult;
+    const profile = normalizeProfileExtraction(params.extraction as ProfileExtractionResult);
 
     return {
       kind: 'profile_batch',
@@ -69,24 +71,66 @@ export async function mapExtractionToIntake(params: {
         age: profile.age,
         location: profile.location,
         bio: profile.bio,
-        promptSet: profile.promptSet ?? [],
-        photoNotes: profile.photoNotes ?? [],
-        vibeTags: profile.vibeTags ?? [],
-        redFlags: profile.redFlags ?? [],
-        extractionConfidence: profile.extractionConfidence ?? 0.7,
+        promptSet: profile.promptSet,
+        photoNotes: profile.photoNotes,
+        vibeTags: profile.vibeTags,
+        redFlags: profile.redFlags,
+        extractionConfidence: profile.extractionConfidence,
       },
       messages: [],
     };
   }
 
-  const chat = params.extraction as ChatExtractionResult;
+  const chat = normalizeChatExtraction(params.extraction as ChatExtractionResult);
   const threadId = await resolveChatThreadId(params.repository, chat.threadHint);
 
   return {
     kind: 'chat_batch',
     attachments: params.attachments,
     threadId,
-    messages: chat.messages ?? [],
+    messages: chat.messages,
+  };
+}
+
+function normalizeProfileExtraction(extraction: ProfileExtractionResult): ProfileExtractionResult {
+  const displayName = cleanString(extraction.displayName) || 'Unknown';
+  const promptSet = (extraction.promptSet ?? [])
+    .map((entry) => ({
+      prompt: cleanString(entry.prompt),
+      answer: cleanString(entry.answer),
+    }))
+    .filter((entry) => entry.prompt && entry.answer);
+
+  return {
+    kind: 'profile_batch',
+    displayName,
+    age: normalizeAge(extraction.age),
+    location: optionalString(extraction.location),
+    bio: optionalString(extraction.bio),
+    promptSet,
+    photoNotes: normalizeStringList(extraction.photoNotes),
+    vibeTags: normalizeStringList(extraction.vibeTags),
+    redFlags: normalizeStringList(extraction.redFlags),
+    extractionConfidence: normalizeConfidence(extraction.extractionConfidence, 0.7),
+    rawSummary: optionalString(extraction.rawSummary),
+  };
+}
+
+function normalizeChatExtraction(extraction: ChatExtractionResult): ChatExtractionResult {
+  const messages = (extraction.messages ?? [])
+    .map((message) => ({
+      direction: (message.direction === 'outbound' ? 'outbound' : 'inbound') as 'inbound' | 'outbound',
+      body: cleanString(message.body),
+      confidence: normalizeConfidence(message.confidence, 0.8),
+    }))
+    .filter((message) => message.body.length > 0);
+
+  return {
+    kind: 'chat_batch',
+    threadHint: optionalString(extraction.threadHint),
+    messages,
+    extractionConfidence: normalizeConfidence(extraction.extractionConfidence, 0.7),
+    rawSummary: optionalString(extraction.rawSummary),
   };
 }
 
@@ -119,4 +163,28 @@ async function resolveChatThreadId(repository: Repository, threadHint?: string):
 
   const demoThread = await ensureDemoThread(repository);
   return demoThread.id;
+}
+
+function normalizeStringList(values?: string[]): string[] {
+  return (values ?? []).map(cleanString).filter(Boolean);
+}
+
+function normalizeAge(age?: number): number | undefined {
+  if (!age || !Number.isFinite(age)) return undefined;
+  if (age < 18 || age > 99) return undefined;
+  return Math.round(age);
+}
+
+function normalizeConfidence(value: number | undefined, fallback: number): number {
+  if (typeof value !== 'number' || Number.isNaN(value)) return fallback;
+  return Math.max(0, Math.min(1, value));
+}
+
+function optionalString(value?: string): string | undefined {
+  const cleaned = cleanString(value);
+  return cleaned || undefined;
+}
+
+function cleanString(value?: string): string {
+  return (value ?? '').trim().replace(/\s+/g, ' ');
 }
