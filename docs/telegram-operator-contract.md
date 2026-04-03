@@ -50,6 +50,12 @@ Initial command family:
 
 Status:
 - command parsing abstraction implemented in `src/modules/telegram/command-router.ts`
+- minimal command handling abstraction implemented in `src/modules/telegram/command-handler.ts` for:
+  - `/followups`
+  - `/threads`
+  - `/thread <threadId>`
+  - `/close <threadId>`
+  - `/reopen <threadId>`
 
 ---
 

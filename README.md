@@ -103,3 +103,10 @@ Telegram command parsing now recognizes:
 - `/mark-sent <threadId> <text>`
 - `/mark-replied <threadId> <text>`
 - `/followup <threadId> <note>`
+
+Minimal Telegram command handling abstraction now supports:
+- `/followups`
+- `/threads`
+- `/thread <threadId>`
+- `/close <threadId>`
+- `/reopen <threadId>`
