@@ -105,6 +105,12 @@ Success criteria:
 - thread state can evolve intentionally
 - reminders/tasks reflect actual operator actions
 
+Substeps:
+- 5a: thread state transitions
+- 5b: draft/message operator actions
+- 5c: follow-up task actions
+- 5d: action endpoint documentation + manual test flow updates
+
 ### Step 6 — Telegram-facing operator interface
 Deliverable:
 - Telegram-oriented ingestion/command layer design and first implementation pass

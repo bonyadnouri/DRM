@@ -30,6 +30,10 @@ A local testable MVP scaffold with:
 - Prisma schema + local SQLite scaffold, now usable via `PERSISTENCE_PROVIDER=prisma`
 - identity matching heuristics for profile linking
 - `GET /state`, `GET /threads`, `GET /followups`, and `GET /health` for inspection
+- thread state transition endpoints:
+  - `POST /threads/:threadId/close`
+  - `POST /threads/:threadId/reopen`
+  - `POST /threads/:threadId/stage`
 
 ## Run locally
 ```bash
