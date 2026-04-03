@@ -1,23 +1,25 @@
 import type { IntakeRequest } from '../../domain/intake.js';
-import type { ExtractionAdapter } from '../extraction/adapter.js';
+import type {
+  ChatExtractionResult,
+  ExtractionAdapter,
+  ProfileExtractionResult,
+} from '../extraction/adapter.js';
 import type { Repository } from '../persistence/repository.js';
 import { ensureDemoThread, processIntake, type IntakeResult } from './service.js';
+
+export interface ExtractedIntakePipelineResult {
+  extraction: ProfileExtractionResult | ChatExtractionResult;
+  intake: IntakeRequest;
+  result: IntakeResult;
+}
 
 export async function processExtractedIntake(params: {
   kind: 'profile_batch' | 'chat_batch';
   attachments: Array<{ filename: string; path?: string; mimeType?: string }>;
   extractionAdapter: ExtractionAdapter;
   repository: Repository;
-}): Promise<{ extraction: unknown; result: IntakeResult }> {
-  const extraction = await params.extractionAdapter.extract({
-    kind: params.kind,
-    attachments: params.attachments,
-    instruction:
-      params.kind === 'profile_batch'
-        ? 'Extract the profile screenshots into structured Hinge profile JSON.'
-        : 'Extract the chat screenshots into normalized Hinge chat JSON.',
-  });
-
+}): Promise<ExtractedIntakePipelineResult> {
+  const extraction = await extractScreenshots(params);
   const intake = await mapExtractionToIntake({
     kind: params.kind,
     attachments: params.attachments,
@@ -28,28 +30,36 @@ export async function processExtractedIntake(params: {
 
   return {
     extraction,
+    intake,
     result,
   };
 }
 
-async function mapExtractionToIntake(params: {
+export async function extractScreenshots(params: {
   kind: 'profile_batch' | 'chat_batch';
   attachments: Array<{ filename: string; path?: string; mimeType?: string }>;
-  extraction: unknown;
+  extractionAdapter: ExtractionAdapter;
+}): Promise<ProfileExtractionResult | ChatExtractionResult> {
+  const extraction = await params.extractionAdapter.extract({
+    kind: params.kind,
+    attachments: params.attachments,
+    instruction:
+      params.kind === 'profile_batch'
+        ? 'Extract the profile screenshots into structured Hinge profile JSON.'
+        : 'Extract the chat screenshots into normalized Hinge chat JSON.',
+  });
+
+  return extraction as ProfileExtractionResult | ChatExtractionResult;
+}
+
+export async function mapExtractionToIntake(params: {
+  kind: 'profile_batch' | 'chat_batch';
+  attachments: Array<{ filename: string; path?: string; mimeType?: string }>;
+  extraction: ProfileExtractionResult | ChatExtractionResult;
   repository: Repository;
 }): Promise<IntakeRequest> {
   if (params.kind === 'profile_batch') {
-    const profile = params.extraction as {
-      displayName: string;
-      age?: number;
-      location?: string;
-      bio?: string;
-      promptSet?: Array<{ prompt: string; answer: string }>;
-      photoNotes?: string[];
-      vibeTags?: string[];
-      redFlags?: string[];
-      extractionConfidence?: number;
-    };
+    const profile = params.extraction as ProfileExtractionResult;
 
     return {
       kind: 'profile_batch',
@@ -69,17 +79,44 @@ async function mapExtractionToIntake(params: {
     };
   }
 
-  const chat = params.extraction as {
-    threadHint?: string;
-    messages?: Array<{ direction: 'inbound' | 'outbound'; body: string; confidence: number }>;
-  };
-
-  const demoThread = await ensureDemoThread(params.repository);
+  const chat = params.extraction as ChatExtractionResult;
+  const threadId = await resolveChatThreadId(params.repository, chat.threadHint);
 
   return {
     kind: 'chat_batch',
     attachments: params.attachments,
-    threadId: demoThread.id,
+    threadId,
     messages: chat.messages ?? [],
   };
+}
+
+async function resolveChatThreadId(repository: Repository, threadHint?: string): Promise<string> {
+  const normalizedHint = threadHint?.trim().toLowerCase();
+  if (normalizedHint) {
+    const threads = await repository.listThreads();
+    const profiles = await repository.listProfiles();
+    const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
+
+    for (const thread of threads) {
+      const profile = profilesById.get(thread.profileId);
+      const candidateText = [
+        thread.id,
+        thread.lastSummary,
+        thread.nextGoal,
+        profile?.displayName,
+        profile?.location,
+        ...(profile?.vibeTags ?? []),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      if (candidateText.includes(normalizedHint)) {
+        return thread.id;
+      }
+    }
+  }
+
+  const demoThread = await ensureDemoThread(repository);
+  return demoThread.id;
 }

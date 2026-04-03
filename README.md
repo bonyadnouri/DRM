@@ -20,6 +20,7 @@ A local testable MVP scaffold with:
 - extraction adapter boundary for LLM/vision-based screenshot parsing
 - demo extraction endpoints: `POST /extract/profile-demo` and `POST /extract/chat-demo`
 - end-to-end extraction-to-intake demo endpoints: `POST /pipeline/profile-demo` and `POST /pipeline/chat-demo`
+- shared extraction-to-intake orchestration module for both profile and chat paths
 - optional real OpenAI vision extraction when `OPENAI_API_KEY` is present
 - Telegram-style text presenter for operator-friendly output previews
 - repository abstraction now wired into runtime intake writes
