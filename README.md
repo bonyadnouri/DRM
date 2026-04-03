@@ -81,3 +81,7 @@ For a fuller local verification flow, use:
 - reminders
 - telegram interface
 - persistence
+
+## Telegram operator flow
+Initial Telegram operator contract is documented in:
+- `docs/telegram-operator-contract.md`
