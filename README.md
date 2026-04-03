@@ -34,6 +34,9 @@ A local testable MVP scaffold with:
   - `POST /threads/:threadId/close`
   - `POST /threads/:threadId/reopen`
   - `POST /threads/:threadId/stage`
+- operator message action endpoints:
+  - `POST /threads/:threadId/mark-sent`
+  - `POST /threads/:threadId/mark-replied`
 
 ## Run locally
 ```bash

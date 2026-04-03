@@ -11,6 +11,7 @@ import { createExtractionAdapter } from './modules/extraction/index.js';
 import { processExtractedIntake } from './modules/intake/extraction-intake.js';
 import { ensureDemoThread, processIntake } from './modules/intake/service.js';
 import { closeThread, reopenThread, setThreadStage } from './modules/intake/thread-actions.js';
+import { markDraftSent, markReplied } from './modules/intake/operator-actions.js';
 import { createRepository } from './modules/persistence/index.js';
 import { formatChatResult, formatProfileResult } from './modules/telegram/presenter.js';
 
@@ -233,6 +234,10 @@ const threadStageSchema = z.object({
   stage: z.enum(['new', 'opened', 'active', 'followup_needed', 'close_candidate', 'closed']),
 });
 
+const outboundMessageSchema = z.object({
+  body: z.string().min(1),
+});
+
 app.post('/threads/:threadId/close', async (request, reply) => {
   try {
     const result = await closeThread(repository, (request.params as { threadId: string }).threadId);
@@ -263,6 +268,40 @@ app.post('/threads/:threadId/stage', async (request, reply) => {
       (request.params as { threadId: string }).threadId,
       parsed.data.stage,
     );
+    return reply.code(200).send({ ok: true, result });
+  } catch (error) {
+    return reply.code(404).send({ ok: false, error: error instanceof Error ? error.message : 'unknown_error' });
+  }
+});
+
+app.post('/threads/:threadId/mark-sent', async (request, reply) => {
+  const parsed = outboundMessageSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return reply.code(400).send({ ok: false, error: 'invalid_outbound_payload', issues: parsed.error.issues });
+  }
+
+  try {
+    const result = await markDraftSent(repository, {
+      threadId: (request.params as { threadId: string }).threadId,
+      body: parsed.data.body,
+    });
+    return reply.code(200).send({ ok: true, result });
+  } catch (error) {
+    return reply.code(404).send({ ok: false, error: error instanceof Error ? error.message : 'unknown_error' });
+  }
+});
+
+app.post('/threads/:threadId/mark-replied', async (request, reply) => {
+  const parsed = outboundMessageSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return reply.code(400).send({ ok: false, error: 'invalid_outbound_payload', issues: parsed.error.issues });
+  }
+
+  try {
+    const result = await markReplied(repository, {
+      threadId: (request.params as { threadId: string }).threadId,
+      body: parsed.data.body,
+    });
     return reply.code(200).send({ ok: true, result });
   } catch (error) {
     return reply.code(404).send({ ok: false, error: error instanceof Error ? error.message : 'unknown_error' });
