@@ -81,7 +81,73 @@ Expected:
 
 ---
 
-## Test 7 — Inspect raw repository state
+## Test 7 — Thread state transition actions
+First get a thread id from:
+```bash
+curl http://localhost:3000/threads
+```
+
+Then test:
+```bash
+curl -X POST http://localhost:3000/threads/<threadId>/close
+curl -X POST http://localhost:3000/threads/<threadId>/reopen
+curl -X POST http://localhost:3000/threads/<threadId>/stage \
+  -H 'content-type: application/json' \
+  -d '{"stage":"followup_needed"}'
+```
+Expected:
+- thread stage changes successfully
+- updated thread returned in response
+
+---
+
+## Test 8 — Operator outbound actions
+Using a valid thread id:
+```bash
+curl -X POST http://localhost:3000/threads/<threadId>/mark-sent \
+  -H 'content-type: application/json' \
+  -d '{"body":"Sent a playful opener."}'
+
+curl -X POST http://localhost:3000/threads/<threadId>/mark-replied \
+  -H 'content-type: application/json' \
+  -d '{"body":"Replied and kept momentum going."}'
+```
+Expected:
+- outbound message is logged
+- thread summary updates
+- thread remains/returns active
+
+---
+
+## Test 9 — Follow-up task actions
+First inspect current followups:
+```bash
+curl http://localhost:3000/followups
+```
+
+Then create a manual follow-up:
+```bash
+curl -X POST http://localhost:3000/threads/<threadId>/followups \
+  -H 'content-type: application/json' \
+  -d '{"note":"Follow up after weekend","dueAt":"2026-04-06T10:00:00.000Z","priority":"medium"}'
+```
+
+Then reschedule / complete a task:
+```bash
+curl -X POST http://localhost:3000/tasks/<taskId>/reschedule \
+  -H 'content-type: application/json' \
+  -d '{"dueAt":"2026-04-07T10:00:00.000Z"}'
+
+curl -X POST http://localhost:3000/tasks/<taskId>/done
+```
+Expected:
+- follow-up task can be created
+- due date can be changed
+- task can be marked done
+
+---
+
+## Test 10 — Inspect raw repository state
 ```bash
 curl http://localhost:3000/state
 ```

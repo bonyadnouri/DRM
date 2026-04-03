@@ -105,7 +105,7 @@ Success criteria:
 - thread state can evolve intentionally
 - reminders/tasks reflect actual operator actions
 
-Substeps:
+Status: completed through sub-steps 5a-5d
 - 5a: thread state transitions
 - 5b: draft/message operator actions
 - 5c: follow-up task actions

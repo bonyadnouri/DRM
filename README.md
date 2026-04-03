@@ -70,6 +70,7 @@ curl http://localhost:3000/followups
 
 For a fuller local verification flow, use:
 - `docs/manual-test-checklist.md`
+- includes thread state transitions, outbound action logging, and follow-up task actions
 
 ## Planned modules
 - ingestion
