@@ -57,6 +57,9 @@ curl http://localhost:3000/threads
 curl http://localhost:3000/followups
 ```
 
+For a fuller local verification flow, use:
+- `docs/manual-test-checklist.md`
+
 ## Planned modules
 - ingestion
 - extraction

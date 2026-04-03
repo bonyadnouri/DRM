@@ -91,6 +91,12 @@ Success criteria:
 - one endpoint path handles extract -> normalize -> persist -> draft
 - mock and OpenAI adapters are swappable without route changes
 
+Status: completed through sub-steps 4a-4d
+- 4a: `pipeline/chat-demo`
+- 4b: shared extraction/intake orchestration refactor
+- 4c: extraction normalization and fallback handling
+- 4d: manual test checklist and runtime-path documentation
+
 ### Step 5 — Add operator actions/state transitions
 Deliverable:
 - endpoints or service actions for: mark sent, mark replied, close thread, reopen thread, schedule follow-up
