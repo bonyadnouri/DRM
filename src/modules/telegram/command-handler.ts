@@ -1,5 +1,7 @@
 import { listOpenFollowups, listThreadViews } from '../crm/query-service.js';
-import { closeThread, reopenThread } from '../intake/thread-actions.js';
+import { markDraftSent, markReplied } from '../intake/operator-actions.js';
+import { createFollowupTask } from '../intake/task-actions.js';
+import { closeThread, reopenThread, setThreadStage } from '../intake/thread-actions.js';
 import type { Repository } from '../persistence/repository.js';
 import {
   formatActionConfirmation,
@@ -57,6 +59,55 @@ export async function handleTelegramCommand(repository: Repository, command: Tel
         id: result.thread.id,
         action: 'reopen',
         detail: `New stage: ${result.thread.stage}`,
+      });
+    }
+
+    case 'stage': {
+      const result = await setThreadStage(repository, command.threadId, command.stage);
+      return formatActionConfirmation({
+        target: 'thread',
+        id: result.thread.id,
+        action: `set_stage:${command.stage}`,
+        detail: `New stage: ${result.thread.stage}`,
+      });
+    }
+
+    case 'mark_sent': {
+      const result = await markDraftSent(repository, {
+        threadId: command.threadId,
+        body: command.body,
+      });
+      return formatActionConfirmation({
+        target: 'message',
+        id: result.message.id,
+        action: 'mark_sent',
+        detail: `Thread: ${result.threadId}`,
+      });
+    }
+
+    case 'mark_replied': {
+      const result = await markReplied(repository, {
+        threadId: command.threadId,
+        body: command.body,
+      });
+      return formatActionConfirmation({
+        target: 'message',
+        id: result.message.id,
+        action: 'mark_replied',
+        detail: `Thread: ${result.threadId}`,
+      });
+    }
+
+    case 'followup': {
+      const result = await createFollowupTask(repository, {
+        threadId: command.threadId,
+        note: command.note,
+      });
+      return formatActionConfirmation({
+        target: 'task',
+        id: result.task.id,
+        action: 'create_followup',
+        detail: `Thread: ${result.task.threadId}`,
       });
     }
 

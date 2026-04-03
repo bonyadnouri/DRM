@@ -56,6 +56,10 @@ Status:
   - `/thread <threadId>`
   - `/close <threadId>`
   - `/reopen <threadId>`
+  - `/stage <threadId> <stage>`
+  - `/mark-sent <threadId> <text>`
+  - `/mark-replied <threadId> <text>`
+  - `/followup <threadId> <note>`
 
 ---
 
