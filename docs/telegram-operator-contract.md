@@ -158,6 +158,20 @@ Create a follow-up task and confirm.
 
 ---
 
+## Current implementation status
+Completed so far:
+- Telegram operator workflow defined
+- response formatting layer implemented
+- command parsing abstraction implemented
+- minimal command handling path implemented for the first command family
+
+Current minimal Telegram-facing flow is:
+1. parse command text
+2. map command to repository/action logic
+3. render operator-facing Telegram text
+
+This is not yet a real inbound bot/webhook integration, but it is the first working Telegram-oriented command flow inside the codebase.
+
 ## Success criteria for Step 6a
 - Telegram operator workflow is explicitly defined
 - first command surface is chosen

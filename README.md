@@ -86,6 +86,9 @@ For a fuller local verification flow, use:
 Initial Telegram operator contract is documented in:
 - `docs/telegram-operator-contract.md`
 
+Current minimal Telegram command flow is documented in:
+- `docs/telegram-command-flow.md`
+
 Telegram presentation helpers now cover:
 - profile results
 - chat results
