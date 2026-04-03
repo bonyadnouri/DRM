@@ -37,6 +37,10 @@ A local testable MVP scaffold with:
 - operator message action endpoints:
   - `POST /threads/:threadId/mark-sent`
   - `POST /threads/:threadId/mark-replied`
+- follow-up task action endpoints:
+  - `POST /tasks/:taskId/done`
+  - `POST /tasks/:taskId/reschedule`
+  - `POST /threads/:threadId/followups`
 
 ## Run locally
 ```bash

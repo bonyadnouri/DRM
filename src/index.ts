@@ -12,6 +12,7 @@ import { processExtractedIntake } from './modules/intake/extraction-intake.js';
 import { ensureDemoThread, processIntake } from './modules/intake/service.js';
 import { closeThread, reopenThread, setThreadStage } from './modules/intake/thread-actions.js';
 import { markDraftSent, markReplied } from './modules/intake/operator-actions.js';
+import { createFollowupTask, markTaskDone, rescheduleTask } from './modules/intake/task-actions.js';
 import { createRepository } from './modules/persistence/index.js';
 import { formatChatResult, formatProfileResult } from './modules/telegram/presenter.js';
 
@@ -238,6 +239,16 @@ const outboundMessageSchema = z.object({
   body: z.string().min(1),
 });
 
+const taskRescheduleSchema = z.object({
+  dueAt: z.string().min(1),
+});
+
+const createFollowupSchema = z.object({
+  note: z.string().min(1),
+  dueAt: z.string().min(1).optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
+});
+
 app.post('/threads/:threadId/close', async (request, reply) => {
   try {
     const result = await closeThread(repository, (request.params as { threadId: string }).threadId);
@@ -301,6 +312,51 @@ app.post('/threads/:threadId/mark-replied', async (request, reply) => {
     const result = await markReplied(repository, {
       threadId: (request.params as { threadId: string }).threadId,
       body: parsed.data.body,
+    });
+    return reply.code(200).send({ ok: true, result });
+  } catch (error) {
+    return reply.code(404).send({ ok: false, error: error instanceof Error ? error.message : 'unknown_error' });
+  }
+});
+
+app.post('/tasks/:taskId/done', async (request, reply) => {
+  try {
+    const result = await markTaskDone(repository, (request.params as { taskId: string }).taskId);
+    return reply.code(200).send({ ok: true, result });
+  } catch (error) {
+    return reply.code(404).send({ ok: false, error: error instanceof Error ? error.message : 'unknown_error' });
+  }
+});
+
+app.post('/tasks/:taskId/reschedule', async (request, reply) => {
+  const parsed = taskRescheduleSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return reply.code(400).send({ ok: false, error: 'invalid_reschedule_payload', issues: parsed.error.issues });
+  }
+
+  try {
+    const result = await rescheduleTask(repository, {
+      taskId: (request.params as { taskId: string }).taskId,
+      dueAt: parsed.data.dueAt,
+    });
+    return reply.code(200).send({ ok: true, result });
+  } catch (error) {
+    return reply.code(404).send({ ok: false, error: error instanceof Error ? error.message : 'unknown_error' });
+  }
+});
+
+app.post('/threads/:threadId/followups', async (request, reply) => {
+  const parsed = createFollowupSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return reply.code(400).send({ ok: false, error: 'invalid_followup_payload', issues: parsed.error.issues });
+  }
+
+  try {
+    const result = await createFollowupTask(repository, {
+      threadId: (request.params as { threadId: string }).threadId,
+      note: parsed.data.note,
+      dueAt: parsed.data.dueAt,
+      priority: parsed.data.priority,
     });
     return reply.code(200).send({ ok: true, result });
   } catch (error) {
