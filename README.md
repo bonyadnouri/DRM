@@ -88,6 +88,7 @@ Initial Telegram operator contract is documented in:
 
 Current minimal Telegram command flow is documented in:
 - `docs/telegram-command-flow.md`
+- `docs/telegram-test-flow.md`
 
 Telegram presentation helpers now cover:
 - profile results

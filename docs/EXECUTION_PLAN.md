@@ -120,12 +120,12 @@ Success criteria:
 - a minimal real Telegram flow becomes possible
 - user can submit inputs and get structured outputs without manual curl-only workflow
 
-Status: 6a-6d completed
+Status: Step 6 completed through sub-steps 6a-6e
 - 6a: Telegram operator contract
 - 6b: Telegram response formatting layer
 - 6c: Telegram command routing abstraction
 - 6d: minimal Telegram command handling path
-- 6e: Telegram test flow + docs (next)
+- 6e: Telegram test flow + docs
 
 ### Step 7 — Hardening and first realistic test pass
 Deliverable:
