@@ -85,3 +85,10 @@ For a fuller local verification flow, use:
 ## Telegram operator flow
 Initial Telegram operator contract is documented in:
 - `docs/telegram-operator-contract.md`
+
+Telegram presentation helpers now cover:
+- profile results
+- chat results
+- follow-up lists
+- thread detail views
+- action confirmations
